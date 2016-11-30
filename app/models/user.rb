@@ -60,6 +60,11 @@ class User < ApplicationRecord
     reset_sent_at < 2.hours.ago
   end
 
+  def feed
+    Micropost.where("user_id = ?", id)
+    #essentially equivalent to writing microposts
+  end
+
   private
 
     def downcase_email
