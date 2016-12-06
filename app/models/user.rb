@@ -14,6 +14,14 @@ class User < ApplicationRecord
                                   foreign_key: 'followed_id',
                                   dependent: :destroy
 
+  has_many :passive_relationships, class_name:  "Relationship",
+                                   foreign_key: "followed_id",
+                                   dependent:   :destroy                                
+  
+  has_many :following, through: :active_relationships, source: :followed
+  has_many :followers, through: :passive_relationships, source: :follower
+
+
   def User.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
                                                   BCrypt::Engine.cost
@@ -77,6 +85,21 @@ class User < ApplicationRecord
     def create_activation_digest
       self.activation_token  = User.new_token
       self.activation_digest = User.digest(activation_token)
+    end
+
+      # Follows a user.
+    def follow(other_user)
+      active_relationships.create(followed_id: other_user.id)
+    end
+
+    # Unfollows a user.
+    def unfollow(other_user)
+      active_relationships.find_by(followed_id: other_user.id).destroy
+    end
+
+    # Returns true if the current user is following the other user.
+    def following?(other_user)
+      following.include?(other_user)
     end
 
 end
