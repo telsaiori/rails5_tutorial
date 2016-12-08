@@ -71,11 +71,6 @@ class User < ApplicationRecord
     reset_sent_at < 2.hours.ago
   end
 
-  def feed
-    Micropost.where("user_id = ?", id)
-    #essentially equivalent to writing microposts
-  end
-
   # Follows a user.
   def follow(other_user)
     active_relationships.create(followed_id: other_user.id)
@@ -89,6 +84,13 @@ class User < ApplicationRecord
   # Returns true if the current user is following the other user.
   def following?(other_user)
     following.include?(other_user)
+  end
+
+  def feed
+    following_ids = "SELECT followed_id FROM relationships 
+                     Where follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids})
+                     OR user_id = :user_id", user_id: id)
   end
 
   private
